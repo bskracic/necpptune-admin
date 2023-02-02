@@ -3,14 +3,21 @@ import UnzipStrategy from "./unzip.strategy";
 const unzip = require('unzip-stream');
 
 export class DefaultUnzipStrategy implements UnzipStrategy {
-    unzip(fileBuffer: Buffer, path: string) {
+    async unzip(fileBuffer: Buffer, path: string): Promise<string> {
         const readable = new Readable()
         readable._read = () => { }
         readable.push(fileBuffer)
         readable.push(null)
+    
+        return await new Promise((resolve, reject) => {
+            const request = unzip.Extract({ path: path });
+            readable.pipe(request);
+            request.on('finish', () => {
+                resolve("finsihed");
+            })
+        });
 
         
-        readable.pipe(unzip.Extract({ path: path }))
     }
 
 }

@@ -7,6 +7,7 @@ import { DatabaseModule } from './database/database.module';
 import { TaskModule } from './task/task.module';
 import { StudentModule } from './student/student.module';
 import { SubmissionModule } from './submission/submission.module';
+import { MinioClientModule } from './minio-client/minio-client.module';
 
 @Module({
   imports: [
@@ -14,7 +15,8 @@ import { SubmissionModule } from './submission/submission.module';
     ExamModule,
     TaskModule,
     StudentModule,
-    SubmissionModule
+    SubmissionModule,
+    MinioClientModule
   ],
   controllers: [AppController],
   providers: [AppService],

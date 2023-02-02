@@ -18,7 +18,7 @@ export class Task {
     @Column({name: 'exam_group'})
     group: string;
 
-    @Column({name: 'max_points'})
+    @Column({name: 'max_points', type: "decimal", precision: 10, scale: 2, default: 0})
     maxPoints: number;
 
     @ManyToOne(() => Exam, (exam) => exam.tasks)

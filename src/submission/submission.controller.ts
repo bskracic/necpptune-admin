@@ -3,10 +3,13 @@ import { SubmissionService } from './submission.service';
 import { CreateSubmissionDto } from './dto/create-submission.dto';
 import { UpdateSubmissionDto } from './dto/update-submission.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { MinioClientService } from 'src/minio-client/minio-client.service';
 
 @Controller('submission')
 export class SubmissionController {
-  constructor(private readonly submissionService: SubmissionService) {}
+  constructor(
+    private readonly submissionService: SubmissionService
+    ) {}
 
   @Post('upload')
   @UseInterceptors(FileInterceptor('zip'))
@@ -14,6 +17,13 @@ export class SubmissionController {
     // TODO: validate body
     return await this.submissionService.create(file, body);
   }
+
+  @Post("file")
+  @UseInterceptors(FileInterceptor("file"))
+  async test(@UploadedFile() file: Express.Multer.File) {
+    return this.submissionService.testMinio(file);
+  }
+
 
   @Get()
   findAll() {

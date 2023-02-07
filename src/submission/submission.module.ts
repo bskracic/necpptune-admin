@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { Exam } from 'src/exam/entities/exam.entity';
 import { MinioClientModule } from 'src/minio-client/minio-client.module';
 import { Student } from 'src/student/entities/student.entity';
 import { Task } from 'src/task/entities/task.entity';
@@ -11,7 +12,7 @@ import { SubmissionTaskController } from './submission.task.controller';
 import { SubmissionTaskService } from './submission.task.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Submission, SubmissionTask, Student, Task]), MinioClientModule],
+  imports: [TypeOrmModule.forFeature([Submission, SubmissionTask, Student, Task, Exam]), MinioClientModule],
   controllers: [SubmissionController, SubmissionTaskController],
   providers: [SubmissionService, SubmissionTaskService]
 })

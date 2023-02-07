@@ -10,7 +10,7 @@ export class SubmissionTask {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @ManyToOne(() => Student, (student) => [])
+    @ManyToOne(type => Student, s => s.submissionTasks)
     @JoinColumn({ name: "student_id" })
     student: Student;
 
@@ -18,7 +18,7 @@ export class SubmissionTask {
     @JoinColumn({ name: "task_id" })
     task: Task;
 
-    @ManyToOne(() => Submission, (submission) => [])
+    @ManyToOne(() => Submission, (submission) => submission.submissionTasks)
     @JoinColumn({ name: "submission_id" })
     submission: Submission;
 

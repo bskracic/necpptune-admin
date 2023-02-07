@@ -1,4 +1,4 @@
-import { Injectable, Param, UseFilters } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Exam } from 'src/exam/entities/exam.entity';
 import { Repository } from 'typeorm';
@@ -32,7 +32,7 @@ export class TaskService {
   }
 
   async findOne(id: number) {
-    return `This action returns a #${id} task`;
+    return this.taskRepository.findOneBy({id: id});
   }
 
   update(id: number, updateTaskDto: UpdateTaskDto) {

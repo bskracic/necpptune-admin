@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Exam } from 'src/exam/entities/exam.entity';
 import { MinioClientService } from 'src/minio-client/minio-client.service';
 import { Student } from 'src/student/entities/student.entity';
-import { Task } from 'src/task/entities/task.entity';
 import { FileCppWalkIterator, StudentFileData } from 'src/utils/iterator';
 import { DefaultUnzipStrategy } from 'src/utils/unzip';
 import { Repository } from 'typeorm';
@@ -24,21 +24,22 @@ export class SubmissionService {
     private submisstionTaskRepo: Repository<SubmissionTask>,
     @InjectRepository(Student)
     private studentRepository: Repository<Student>,
-    @InjectRepository(Task)
-    private taskRepository: Repository<Task>,
+    @InjectRepository(Exam)
+    private examRepository: Repository<Exam>,
     private minioClientService: MinioClientService
   ) { }
 
-  async create(file: Express.Multer.File, data: CreateSubmissionDto): Promise<SubmissionTask[]> {
+  async create(file: Express.Multer.File, data: CreateSubmissionDto) {
     
     let submission = this.fromDto(data);
     submission.zipFile = file.originalname;
+    submission.exam =  await this.examRepository.findOneBy({id: data.examId});
     submission = await this.submissionRepository.save(submission);
 
     const unzipPath = `${this.SUBMISSION_DIR_PATH}${submission.id}`;
     const strat = new DefaultUnzipStrategy();
     await strat.unzip(file.buffer, unzipPath);
-
+    
     const taskSubmissions = []
     let it = new FileCppWalkIterator(unzipPath);
     while(it.hasNext()) {
@@ -63,7 +64,8 @@ export class SubmissionService {
       }
     }
 
-    return taskSubmissions;
+    
+    return submission;
   }
 
   private fromDto(dto: CreateSubmissionDto): Submission {
@@ -79,8 +81,15 @@ export class SubmissionService {
     return this.submissionRepository.find();
   }
 
-  findOne(id: string) {
-    return this.submissionRepository.findOneBy({id: id});
+  async findOne(id: string) {
+    const submission = await this.submissionRepository.findOneBy({id: id});
+    const submissionTasks = await this.submisstionTaskRepo
+    // .findBy({submission: submission});
+      .createQueryBuilder('submission_task')
+      .leftJoin('student', 's', 'submission_task.student_id = s.id').getMany();
+    
+    submission.submissionTasks = submissionTasks;
+    return submission;
   }
 
   async checkIfAllGraded(id: string) {

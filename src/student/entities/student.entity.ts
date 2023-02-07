@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { SubmissionTask } from "src/submission/entities/submission.task.entity";
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class Student {
@@ -16,4 +17,7 @@ export class Student {
 
     @Column()
     group: string;
+
+    @OneToMany(type => SubmissionTask, st => st.student)
+    submissionTasks: SubmissionTask[]
 }

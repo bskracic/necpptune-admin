@@ -2,16 +2,20 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MinioClientService } from 'src/minio-client/minio-client.service';
 import { Student } from 'src/student/entities/student.entity';
+import { Task } from 'src/task/entities/task.entity';
 import { FileCppWalkIterator, StudentFileData } from 'src/utils/iterator';
 import { DefaultUnzipStrategy } from 'src/utils/unzip';
 import { Repository } from 'typeorm';
 import { CreateSubmissionDto } from './dto/create-submission.dto';
-import { UpdateSubmissionDto } from './dto/update-submission.dto';
 import { Submission } from './entities/submission.entity';
 import { SubmissionTask } from './entities/submission.task.entity';
+const path = require('path');
+const fs = require('fs');
 
 @Injectable()
 export class SubmissionService {
+
+  SUBMISSION_DIR_PATH: string = "C:\\temp\\submissions-data\\"; // TODO replace this
 
   constructor(
     @InjectRepository(Submission)
@@ -20,32 +24,46 @@ export class SubmissionService {
     private submisstionTaskRepo: Repository<SubmissionTask>,
     @InjectRepository(Student)
     private studentRepository: Repository<Student>,
+    @InjectRepository(Task)
+    private taskRepository: Repository<Task>,
     private minioClientService: MinioClientService
   ) { }
 
-  async create(file: Express.Multer.File, data: CreateSubmissionDto) {
+  async create(file: Express.Multer.File, data: CreateSubmissionDto): Promise<SubmissionTask[]> {
     
     let submission = this.fromDto(data);
     submission.zipFile = file.originalname;
     submission = await this.submissionRepository.save(submission);
 
-    const path = `C:\\temp\\submissions-data\\${submission.id}`;
+    const unzipPath = `${this.SUBMISSION_DIR_PATH}${submission.id}`;
     const strat = new DefaultUnzipStrategy();
-    await strat.unzip(file.buffer, path);
+    await strat.unzip(file.buffer, unzipPath);
 
-    const test: StudentFileData[] = [];
-    let it = new FileCppWalkIterator(path);
+    const taskSubmissions = []
+    let it = new FileCppWalkIterator(unzipPath);
     while(it.hasNext()) {
-      const val: StudentFileData = it.next();
-      test.push(val);
+      const studentData: StudentFileData = it.next();
+      const slug = studentData.identifier.replace("@racunarstvo.hr", "");
+      
+      const student = await this.studentRepository.findOneBy({infoedukaSlug: slug});
+
+      for(let i = 0; i < studentData.files.length; i++) {
+          const filePath = studentData.files[i];
+          
+          const taskSubmission = new SubmissionTask();
+          const temp = filePath.split(path.sep)
+          const uploadedFile = await this.minioClientService.uploadSync(fs.readFileSync(filePath))
+          taskSubmission.fileDetails = path.join(temp[temp.length - 2], temp[temp.length - 1]);
+          taskSubmission.student = student;
+          taskSubmission.fileLink = uploadedFile.url;
+          taskSubmission.submission = submission;
+  
+          this.submisstionTaskRepo.save(taskSubmission);
+          taskSubmissions.push(taskSubmission);
+      }
     }
 
-    return test;
-
-    // walk submission dir and for each
-    //    save to minio
-    //    create and save submission_task record
-    // return list of submissions
+    return taskSubmissions;
   }
 
   private fromDto(dto: CreateSubmissionDto): Submission {
@@ -57,23 +75,22 @@ export class SubmissionService {
     return submission;
   }
 
-  async testMinio(file) {
-    let uploaded_file = await this.minioClientService.upload(file)
-
-    return uploaded_file.url;
-  }
-
   findAll() {
-    return `This action returns all submission`;
+    return this.submissionRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} submission`;
+  findOne(id: string) {
+    return this.submissionRepository.findOneBy({id: id});
   }
 
-  update(id: number, updateSubmissionDto: UpdateSubmissionDto) {
-    return `This action updates a #${id} submission`;
+  async checkIfAllGraded(id: string) {
+    const submission = await this.submissionRepository.findOneBy({id: id});
+    return await this.submisstionTaskRepo.findBy({submission: submission, scorredPoints: null});
   }
+
+  update(id: number) {
+
+  } 
 
   remove(id: number) {
     return `This action removes a #${id} submission`;

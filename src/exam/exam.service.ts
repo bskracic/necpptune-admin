@@ -1,5 +1,6 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Task } from 'src/task/entities/task.entity';
 import { Repository } from 'typeorm';
 import { CreateExamDto } from './dto/create-exam.dto';
 import { UpdateExamDto } from './dto/update-exam.dto';
@@ -10,7 +11,9 @@ export class ExamService {
 
   constructor(
     @InjectRepository(Exam)
-    private examRepository: Repository<Exam>
+    private examRepository: Repository<Exam>,
+    @InjectRepository(Task)
+    private taskRepository: Repository<Exam>
   ) {}
 
   async create(createExamDto: CreateExamDto): Promise<Exam> {
@@ -22,7 +25,16 @@ export class ExamService {
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} exam`;
+    return this.examRepository.findBy({id: id});
+  }
+
+  async findAllGroups(id: number): Promise<string[]> {
+    const rows = await this.taskRepository.createQueryBuilder('task')
+    .select('exam_group')
+    .where(`exam_id = ${id}`)
+    .distinct(true).getRawMany();
+
+    return rows.map(r => r.exam_group);
   }
 
   update(id: number, updateExamDto: UpdateExamDto) {

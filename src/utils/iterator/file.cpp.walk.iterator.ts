@@ -19,9 +19,7 @@ export class FileCppWalkIterator implements FileIterator {
             data.identifier = studentDir;
             dir.files(path.join(filepath, studentDir), {sync:true}).forEach(file => {
                 if (this.isCpp(file)) {
-                    const temp = file.split(path.sep);
-                    const cppFile: string = path.join(temp[temp.length - 2], temp[temp.length - 1])
-                    data.files.push(cppFile)
+                    data.files.push(file)
                 }
             })
             this.studentDatas.push(data);

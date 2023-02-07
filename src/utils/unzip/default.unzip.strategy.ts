@@ -15,6 +15,9 @@ export class DefaultUnzipStrategy implements UnzipStrategy {
             request.on('finish', () => {
                 resolve("finsihed");
             })
+            request.on('error', () => {
+                reject("error")
+            })
         });
 
         

@@ -1,6 +1,6 @@
 import { Student } from "src/student/entities/student.entity";
 import { Task } from "src/task/entities/task.entity";
-import { Column, Double, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Submission } from "./submission.entity";
 
 
@@ -8,7 +8,7 @@ import { Submission } from "./submission.entity";
 export class SubmissionTask {
 
     @PrimaryGeneratedColumn()
-    id: string;
+    id: number;
 
     @ManyToOne(() => Student, (student) => [])
     @JoinColumn({ name: "student_id" })
@@ -29,7 +29,7 @@ export class SubmissionTask {
     fileLink: string;
 
     @Column({ name: 'max_points', type: "decimal", precision: 10, scale: 2, nullable: true })
-    scorredPoints: Double;
+    scorredPoints: number;
 
     @Column({ nullable: true })
     note: string;

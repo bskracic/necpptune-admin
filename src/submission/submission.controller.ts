@@ -1,9 +1,7 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFile } from '@nestjs/common';
-import { SubmissionService } from './submission.service';
-import { CreateSubmissionDto } from './dto/create-submission.dto';
-import { UpdateSubmissionDto } from './dto/update-submission.dto';
+import { Body, Controller, Delete, Get, Param, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { MinioClientService } from 'src/minio-client/minio-client.service';
+import { CreateSubmissionDto } from './dto/create-submission.dto';
+import { SubmissionService } from './submission.service';
 
 @Controller('submission')
 export class SubmissionController {
@@ -18,12 +16,10 @@ export class SubmissionController {
     return await this.submissionService.create(file, body);
   }
 
-  @Post("file")
-  @UseInterceptors(FileInterceptor("file"))
-  async test(@UploadedFile() file: Express.Multer.File) {
-    return this.submissionService.testMinio(file);
+  @Get(':id/check')
+  async check(@Param('id') id: string) {
+    return await this.submissionService.checkIfAllGraded(id);
   }
-
 
   @Get()
   findAll() {
@@ -31,15 +27,9 @@ export class SubmissionController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.submissionService.findOne(+id);
+  async findOne(@Param('id') id: string) {
+    return this.submissionService.findOne(id);
   }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateSubmissionDto: UpdateSubmissionDto) {
-    return this.submissionService.update(+id, updateSubmissionDto);
-  }
-
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.submissionService.remove(+id);

@@ -6,7 +6,7 @@ export class Student {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({name: 'infoeduka_slug'})
+    @Column({name: 'infoeduka_slug', unique: true})
     infoedukaSlug: string;
 
     @Column()

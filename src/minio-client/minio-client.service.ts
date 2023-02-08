@@ -1,8 +1,8 @@
-import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
-import { MinioService } from 'nestjs-minio-client';
-import { config } from './config'
-import { BufferedFile } from './file.model';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import * as crypto from 'crypto';
+import { MinioService } from 'nestjs-minio-client';
+import { config } from './config';
+import { BufferedFile } from './file.model';
 const uuid = require('uuid');
 
 @Injectable()
@@ -47,7 +47,7 @@ export class MinioClientService {
   public async uploadSync(file: Buffer, bucket: string = this.baseBucket) {
     
     const filename = uuid.v4();
-    await this.client.putObject(bucket, uuid.v4(), file, null, function(err, res) {
+    await this.client.putObject(bucket, filename, file, null, function(err, res) {
       if(err) {
         console.log(err)
         throw new HttpException('Error uploading file', HttpStatus.BAD_REQUEST)

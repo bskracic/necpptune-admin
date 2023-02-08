@@ -59,7 +59,7 @@ export class SubmissionService {
           taskSubmission.fileLink = uploadedFile.url;
           taskSubmission.submission = submission;
   
-          this.submisstionTaskRepo.save(taskSubmission);
+          await this.submisstionTaskRepo.save(taskSubmission);
           taskSubmissions.push(taskSubmission);
       }
     }
@@ -82,14 +82,13 @@ export class SubmissionService {
   }
 
   async findOne(id: string) {
-    const submission = await this.submissionRepository.findOneBy({id: id});
-    const submissionTasks = await this.submisstionTaskRepo
-    // .findBy({submission: submission});
-      .createQueryBuilder('submission_task')
-      .leftJoin('student', 's', 'submission_task.student_id = s.id').getMany();
-    
-    submission.submissionTasks = submissionTasks;
-    return submission;
+    return await this.studentRepository.find(
+      {
+        where:{ submissionTasks: { submission: { id: id } } },
+        relations:{
+          submissionTasks: true,
+        }
+      });
   }
 
   async checkIfAllGraded(id: string) {
